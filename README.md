@@ -2,6 +2,16 @@
 
 🚀 **WeOwn AI Infrastructure** - Production-grade Kubernetes platform delivering secure, scalable AI and automation services with enterprise security, zero-trust networking, and SOC2/ISO42001 compliance.
 
+## 🤖 **For AI Agents**
+
+**IMPORTANT:** Before starting any work on this repository, read:
+
+1. `STATUS.md` — Current project state, priorities, and blockers
+2. `WORK_LOG.md` — Detailed work history (local file, not committed)
+3. `DECISIONS.md` — Architectural and process decisions
+
+Always update `STATUS.md` when completing significant work.
+
 ## 📦 **Application Stack**
 
 ### 🤖 **AI & Automation Platform**
