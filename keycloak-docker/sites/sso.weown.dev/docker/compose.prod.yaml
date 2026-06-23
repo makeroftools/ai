@@ -90,11 +90,10 @@ services:
     networks:
       - keycloaknet
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "exec 3<>/dev/tcp/127.0.0.1/8080; echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\n\\r\\n' >&3; if [ $$? -eq 0 ]; then echo 'SUCCESS'; fi; exec 3<&-; exec 3>&-",
-        ]
+      # Busybox ash doesn't support /dev/tcp (bash-ism), and no curl/wget/nc
+      # is available in the MinimOS image. Use pidof on the Java process
+      # to verify Keycloak is running (the server starts on port 8080).
+      test: ["CMD-SHELL", "pidof java > /dev/null 2>&1"]
       start_period: 60s
       interval: 30s
       timeout: 10s
