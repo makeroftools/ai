@@ -1,7 +1,16 @@
 # sso - Caddyfile
 # Reverse proxy for Keycloak SSO
+# Admin path /auth/admin/* restricted to ProtonVPN IP 79.127.183.180
 
 sso.weown.id {
+    @admin_blocked {
+        path /auth/admin/*
+        not remote_ip 79.127.183.180
+    }
+    respond @admin_blocked 403 {
+        body "Access Denied — ProtonVPN required."
+    }
+
     reverse_proxy keycloak:8080 {
         flush_interval -1
         # Forwarded header (RFC 7239) required by Keycloak KC_PROXY_HEADERS=forwarded
