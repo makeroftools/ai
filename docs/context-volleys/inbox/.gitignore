@@ -1,0 +1,6 @@
+# Incoming Context Volleys — ephemeral scratch
+# Raw CVs from external agents saved here for reference.
+# These are scratch data, not canonical artifacts.
+# Canonical CV chains live in ../chains/ and ../ (outgoing artifacts).
+*
+!.gitignore
