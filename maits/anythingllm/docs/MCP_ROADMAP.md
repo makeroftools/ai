@@ -1,123 +1,280 @@
-# MCP Roadmap — MAIT:#AnythingLLM
+# MCP in AnythingLLM — MAIT:#AnythingLLM
 
 > #WeOwnVer: v0.1.0 · Status: 🟡 Prototype · Scope: reference for RAG ingestion
+>
+> Source: [docs.anythingllm.com](https://docs.anythingllm.com/mcp-compatibility/overview) (v1.14.2)
+> Verified: 2026-06-25 — corrected from earlier inference-based draft
 
-Model Context Protocol (MCP) integration is the roadmap path for connecting
-AnythingLLM threads to external tools and services. This document covers the
-current state, what's possible now, and the planned trajectory.
+Model Context Protocol (MCP) is an open protocol developed by Anthropic that
+enables LLM applications to connect with external tools and data sources.
+AnythingLLM supports **Tools** loading via MCP Servers. Resources, Prompts, and
+Sampling are **not** supported.
 
----
-
-## Current State
-
-AnythingLLM supports MCP servers that run alongside the main application.
-MCP server configurations are stored at:
-`/app/server/storage/plugins/anythingllm_mcp_servers.json`
-
-A management script (`mcp.sh`) is available in the K8s deployment tooling for
-operators to add, modify, list, and remove MCP server configurations.
-
-### What MCP Enables Now
-
-- **Tool calling from agent threads** — agents in ALLM can invoke MCP-hosted
-  tools during conversations
-- **Plugin-based architecture** — each MCP server is an independently configured
-  plugin, not hard-coded into the platform
-- **FluentMCP framework** — standardized protocol for cross-platform MCP
-  integration
+MCP is self-hosting only — it is not available in the AnythingLLM Cloud service.
 
 ---
 
-## Current Integration Targets
+## Architecture
 
-### WordPress (via FluentMCP)
+### How MCP Servers Work in AnythingLLM
 
-**Status:** Available — `mcp.sh` has an `add-fluentmcp` command
-**Purpose:** Connect ALLM threads to WordPress content management
+MCP Servers are external processes that expose tools the AnythingLLM agent can
+call. They run alongside the main application and are managed through the
+`anythingllm_mcp_servers.json` configuration file.
 
-Enables agents to:
-- Read and query WordPress posts and pages
-- Search content across the WordPress site
-- Integrate CMS content into RAG workflows
+```text
+┌────────────────────────────────────────────────────┐
+│                AnythingLLM Container                │
+│                                                      │
+│   ┌──────────────┐     ┌────────────────────────┐   │
+│   │    Agent      │────▶│   MCP Server: face-gen │   │
+│   │  (LLM + RAG)  │     │   (npx process)        │   │
+│   │               │     ├────────────────────────┤   │
+│   │ @agent invoke │────▶│   MCP Server: youtube  │   │
+│   │ triggers boot │     │   (uvx process)        │   │
+│   └──────────────┘     ├────────────────────────┤   │
+│                         │   MCP Server: postgres │   │
+│                         │   (streamable HTTP)    │   │
+│                         └────────────────────────┘   │
+└────────────────────────────────────────────────────┘
+```
 
-### Custom MCP Servers
+### Supported Transport Types
 
-**Status:** Available via `mcp.sh` custom server add command
-**Definition:** Any externally hosted MCP-compatible server
+| Transport | Type Value | When to Use |
+|-----------|------------|-------------|
+| **StdIO** | *(default)* | Local command-based MCP servers — requires `command` + `args` |
+| **SSE** | `"sse"` | Server-Sent Events streaming — requires `url` |
+| **Streamable** | `"streamable"` | Alternative streaming protocol — requires `url` |
 
-The `mcp.sh` script supports adding custom MCP servers with:
-- Server name and description
-- Endpoint URL
-- Authentication headers (API keys)
-- Environment configuration
-
----
-
-## Roadmap
-
-### Near-term (Current W26+)
-
-| Capability | Status | Notes |
-|------------|--------|-------|
-| Plugin-based tool integration | Available | Per-server configuration in JSON |
-| WordPress content access | Available | Via FluentMCP |
-| Custom external tool integration | Available | Via custom MCP server config |
-| Multi-server orchestration | Possible | Multiple servers can be configured per instance |
-
-### Medium-term (Post-W26)
-
-| Capability | Notes |
-|------------|-------|
-| MCP-enabled MAIT tool calling | MAIT threads calling external tools via MCP |
-| Data connector expansion | Additional sources beyond Paperless-ngx |
-| Agent skill imports | AnythingLLM Community Hub agent skills — currently restricted to verified/private items only |
-
-### Longer-term
-
-The MCP roadmap is part of the broader platform evolution. As the ecosystem
-matures, MCP will become the primary integration layer between MAITs and
-external systems. The architecture is designed to be protocol-agnostic —
-nothing done through ALLM is the exclusive path.
+If no `type` is specified, `sse` is assumed.
 
 ---
 
-## MCP Configuration Details
+## Configuration
+
+### File Location
+
+The MCP Server configuration is stored at:
+`<STORAGE_LOCATION>/plugins/anythingllm_mcp_servers.json`
+
+The file is **auto-created** when you open the Agent Skills page in the AnythingLLM
+UI. You do not need to create it manually.
+
+In the Docker deployment, `STORAGE_LOCATION` is set via the `STORAGE_LOCATION`
+environment variable.
 
 ### Config File Format
 
 ```json
 {
-  "mcpServers": [
-    {
-      "name": "server-name",
-      "description": "What this server does",
-      "type": "fluentmcp" | "custom",
-      "endpoint": "https://...",
+  "mcpServers": {
+    "face-generator": {
+      "command": "npx",
+      "args": ["@dasheck0/face-generator"],
+      "env": {
+        "MY_ENV_VAR": "my-env-var-value"
+      }
+    },
+    "mcp-youtube": {
+      "command": "uvx",
+      "args": ["mcp-youtube"]
+    },
+    "postgres-http": {
+      "type": "streamable",
+      "url": "http://localhost:3003",
       "headers": {
-        "Authorization": "Bearer ..."
+        "X-API-KEY": "api-key"
       }
     }
-  ]
+  }
 }
 ```
 
-### Management Operations (via `mcp.sh`)
+Each server entry is an object in the `mcpServers` dictionary. The key is the
+server name. Supported fields:
 
-| Operation | Description |
-|-----------|-------------|
-| Add FluentMCP | Register a FluentMCP-compatible server |
-| Add custom | Register a generic MCP server with custom endpoint/auth |
-| Modify | Update an existing server configuration |
-| List | Show all configured MCP servers |
-| Remove | Delete a server configuration |
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `command` | For StdIO | string | The executable to run (e.g. `npx`, `uvx`, `node`) |
+| `args` | No | string[] | Arguments passed to the command |
+| `type` | For SSE/Streamable | string | `"sse"` or `"streamable"` |
+| `url` | For SSE/Streamable | string | Endpoint URL for the MCP server |
+| `headers` | No | object | Custom HTTP headers sent with requests |
+| `env` | No | object | Environment variables for the MCP server process |
+| `anythingllm.autoStart` | No | boolean | Set `false` to prevent automatic startup |
 
 ---
 
-## Key Principles
+## Startup Behavior
 
-1. **MCP is additive, not required** — ALLM works without MCP for core RAG
-   and LLM functionality
-2. **Protocol agnosticism** — MCP is today's integration layer; the system
-   is designed to work with whatever protocol emerges as standard
-3. **Security boundaries** — MCP servers operate with their own authentication;
-   MAIT access is scoped by workspace
+### When MCP Servers Start
+
+AnythingLLM **does not** start MCP servers automatically when the container/app
+starts — this prevents resource overloading on boot.
+
+MCP servers start when either of these occurs:
+1. **The Agent Skills page is opened** in the AnythingLLM UI
+2. **The `@agent` directive is invoked** in a chat
+
+All MCP servers start in the background. Subsequent boots are faster because the
+servers are already cached.
+
+### Autostart Prevention
+
+To prevent a specific MCP server from starting automatically (e.g., to save
+resources), set `anythingllm.autoStart: false`:
+
+```json
+{
+  "mcpServers": {
+    "face-generator": {
+      "command": "npx",
+      "args": ["@dasheck0/face-generator"],
+      "anythingllm": {
+        "autoStart": false
+      }
+    }
+  }
+}
+```
+
+Servers with `autoStart: false` must be started manually from the UI.
+
+---
+
+## Docker-Specific Details
+
+### Pre-installed Commands
+
+The Docker base image (`ubuntu:jammy-20240627.1`) comes with these commands
+pre-installed:
+- `npx`
+- `uv` / `uvx`
+- `node`
+- `bash`
+
+You do not need to install these manually in the Docker deployment.
+
+### File Persistence
+
+MCP server libraries are cached inside the container. If the container is
+stopped or deleted, the cached libraries are lost and must be re-downloaded.
+This also applies to any manually installed tools (`uv tool install xyz`).
+
+### Writing Files to the Host
+
+MCP servers run inside the container. To write files to the host machine, use
+the path prefix:
+```
+/app/server/storage/...
+```
+This maps to the `STORAGE_LOCATION` directory defined when the container was
+started.
+
+### UI Management
+
+The AnythingLLM MCP Management UI provides:
+- **Reload/Restart** — Refresh all MCP servers from config without restarting the container
+- **Status view** — See which servers are running, stopped, or errored
+- **Error logs** — View error output per server
+- **Start/Stop** — Toggle individual servers on the fly
+- **Tool listing** — View all available tools from loaded servers
+- **Delete** — Remove a server from the config file and kill its process
+
+---
+
+## Intelligent Tool Selection
+
+AnythingLLM includes **Intelligent Tool Selection**, which is enabled by default.
+This feature ensures that only the tools relevant to the current chat are added
+to the prompt window — rather than loading every configured tool on every chat.
+
+**Benefits:**
+- Saves up to 80% on token usage per chat
+- Faster response times, especially for local models
+- Better context management — prompt space is used for conversation, not tools
+
+This applies to both built-in skills and MCP servers. It only activates when
+more than the `Max Tools` threshold is set in Agent Skills settings.
+
+---
+
+## Limitations
+
+| Limitation | Details |
+|------------|---------|
+| **Cloud not supported** | MCP is self-hosted Docker/Desktop only |
+| **Tools only** | Resources, Prompts, and Sampling are not supported |
+| **Container persistence** | Docker: cached libraries lost on container delete |
+| **LLM dependency** | Not all LLMs support tool calling — small local models may not work |
+| **Startup time** | More MCP servers = longer initial startup. Plan resources accordingly. |
+
+---
+
+## Security
+
+⚠️ **Never run MCP servers you do not trust.** AnythingLLM does not endorse or
+guarantee the security of third-party MCP tools.
+
+Key security considerations:
+- MCP servers run as processes with access to the environment variables you
+  configure — treat credentials accordingly
+- StdIO servers run commands from your container/host — verify what `npx`/`uvx`
+  packages do before installing
+- SSE/Streamable servers connect to external URLs — ensure the endpoint is
+  trusted and the connection is encrypted
+- Tool issues should be reported to the MCP author, not AnythingLLM maintainers
+
+---
+
+## Troubleshooting
+
+### LLM Not Calling MCP Server
+
+1. Verify the MCP server is running and the tool appears in the Agent Skills page
+2. Check the model — small local models with limited context windows may not
+   reliably use tools
+3. Ensure the model supports tool/function calling
+
+### MCP Server Errors
+
+- **Docker:** Check the container logs
+- **Desktop:** Check the application logs
+
+### Manual Tool Installation
+
+Some MCP servers require `uv tool install <package>`. For Docker:
+1. Open a shell into the container
+2. Run the install command
+3. Click "Refresh" in the Agent Skills page
+
+### Support Channels
+
+- MCP Discussion board (upstream)
+- AnythingLLM Discord server (community)
+- **Do not open GitHub issues** for third-party MCP tool problems
+
+---
+
+## Comparison: Docker vs Desktop
+
+| Aspect | Docker | Desktop |
+|--------|--------|---------|
+| **Commands pre-installed** | npx, uv/uvx, node, bash | Must install manually |
+| **Required version** | Any current | v1.8.0+ |
+| **Tool persistence** | Lost on container delete | Persists on host |
+| **Host file access** | `/app/server/storage/...` only | Any host path |
+| **Cloud support** | N/A (self-hosted only) | N/A (local only) |
+
+---
+
+## Related Docs
+
+| Document | Link |
+|----------|------|
+| Agent Setup | `docs.anythingllm.com/agent/setup` |
+| Agent Overview | `docs.anythingllm.com/agent/overview` |
+| Intelligent Tool Selection | `docs.anythingllm.com/agent/intelligent-tool-selection` |
+| MCP Specification | `modelcontextprotocol.io` (Anthropic) |
+| MCP Discussion Board | Community forum for tool issues |

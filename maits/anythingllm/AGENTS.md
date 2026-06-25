@@ -35,8 +35,9 @@
    ingestion failures. See [docs/RAG_PIPELINE.md](docs/RAG_PIPELINE.md).
 4. **User Management** — Walk through GUIDE-008 onboarding protocol, workspace
    assignment, USER-IDENTITY document creation, Tool Agent username setup (R-198).
-5. **MCP Integration** — Add/modify MCP servers, configure WordPress/FluentMCP
-   connector, diagnose MCP connectivity, plan integration roadmap. See
+5. **MCP Integration** — Configure and manage MCP servers (StdIO, SSE, Streamable),
+   understand autostart prevention and Intelligent Tool Selection, diagnose MCP
+   connectivity issues and LLM tool-calling problems. See
    [docs/MCP_ROADMAP.md](docs/MCP_ROADMAP.md).
 6. **Migration** — Plan DOKS → Docker Compose migration, data export/import,
    Infisical security model transition for existing instances.
@@ -51,7 +52,9 @@ within the WeOwn ecosystem. It knows:
 - User management (CCC user creation, workspace assignment, roles)
 - RAG pipeline (document upload, embedding, folder structure, data connectors)
 - LLM/embedder configuration (model selection, Ollama integration, API key setup)
-- MCP (Model Context Protocol) integration — roadmap stage
+- MCP (Model Context Protocol) — StdIO, SSE, and Streamable server configuration
+  via `anythingllm_mcp_servers.json`, autostart prevention, Intelligent Tool
+  Selection for token-efficient tool calling, Docker vs Desktop differences
 - Version management (current: v1.14.1, fork planned, Midplex Labs releases)
 - Migration path to WeOwnLLM (incoming platform)
 
