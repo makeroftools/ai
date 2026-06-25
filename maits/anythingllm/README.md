@@ -6,7 +6,7 @@
 | **SME** | AnythingLLM — Private AI Chat & Document Processing Platform |
 | **Steward** | @SHD 🇵🇰 (Primary), @MOT 🛠️ (Backup) |
 | **Status** | 🟡 Prototype |
-| **ALLM Thread** | ⏳ PENDING (dev instance setup in progress) |
+| **ALLM Thread** | ✅ `76e9b360-5926-4157-a61c-ba9f878b37c0` (INT-P01, created by @GTM) — dev instance ⏳ PENDING |
 | **Instance** | INT-P01 (AI.WeOwn.Agency), dev.weown.tools (dev) |
 
 ## About

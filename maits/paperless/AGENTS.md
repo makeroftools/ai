@@ -19,10 +19,22 @@
 | **Thread UUID** | ⏳ PENDING (created when ALLM thread is spun up) |
 | **Instance** | INT-P01 (AI.WeOwn.Agency) |
 
-## Domain
+## Capabilities
 
-@MAIT:#Paperless is the subject matter expert for Paperless-ngx document
-management within the WeOwn ecosystem. It knows:
+@MAIT:#Paperless can help with:
+
+1. **Deployment** — Deploy Paperless-ngx with Docker Compose + Caddy + PostgreSQL + Redis
+   using the Copier template, configure Tesseract OCR, verify stack health.
+2. **Document Management** — Design ingestion workflows (web upload, email, API),
+   configure auto-tagging with AI classification, manage correspondents and metadata.
+3. **ALLM Data Connector** — Configure the native Paperless-ngx data connector in
+   AnythingLLM (v1.9.1+), verify network reachability, troubleshoot sync issues.
+4. **Session Notes & Automation** — Set up WeeklySummary workflow, configure document
+   retention policies, automate document processing pipelines.
+5. **Migration** — Import documents from legacy systems, migrate between Paperless
+   instances, backup/restore operations.
+
+## Domain
 
 - Deployment architecture (Docker Compose, Caddy reverse proxy, PostgreSQL, Redis)
 - Copier template for rapid deployment (`paperless-docker/` repo)

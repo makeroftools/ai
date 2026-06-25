@@ -69,17 +69,38 @@ implement.
 > A MAIT is a thread in the `workspace:tools` 🧠 workspace of an AnythingLLM
 > instance, dedicated to a specific Subject Matter Expert domain.
 
-### 2.2 Core Attributes
+**Key implication: MAITs are human-to-agent threads.** The primary actor is the
+**Steward** (a human), not another agent. Agents may consult a MAIT's documentation
+or reference its system prompt, but the thread itself is driven by human training
+and development. This distinguishes MAITs from META threads (which are
+agent-to-agent production orchestrators).
+
+### 2.2 META vs MAIT — Canonical Distinction
+
+Per SharedKernel v3.2.2.1 (🔒 LOCKED):
+
+| Aspect | META | MAIT |
+|--------|------|------|
+| **Agent** | #MetaAgent (Calhoun 🎖️) | SME-specific |
+| **Actor** | User Agents (AI:@<CCC>) | **Human (Steward)** |
+| **Protocol** | #ContextVolley / MCP | #ContextVolley |
+| **Purpose** | Production orchestration | **Training/development** |
+| **ShortCode** | @META:#MetaAgent | @MAIT:#<SME> |
+| **Authority** | Governance + orchestration | READ-ONLY to #MetaAgent (R-200) |
+| **Instance** | INT-M01 (META.ccc.bot) | INT-P01 (AI.WeOwn.Agency) or per-org |
+
+### 2.3 Core Attributes
 
 | Attribute | Definition | Example |
 |-----------|------------|---------|
 | **SME** | Subject Matter Expert domain | Keycloak, AnythingLLM, Paperless-ngx |
 | **ShortCode** | Unique identifier in `@MAIT:#<SME>` format | `@MAIT:#Keycloak` |
-| **Steward** | Responsible human (or agent) for the MAIT | `@MOT 🛠️` |
-| **Thread UUID** | ALLM thread identifier (placeholder until ALLM is ready) | `⏳ PENDING` |
-| **Instance** | Which ANYMLL instance hosts the thread | INT-P01 (AI.WeOwn.Agency) |
+| **Steward** | Responsible human for the MAIT | `@MOT 🛠️` |
+| **Thread UUID** | ALLM thread identifier (placeholder until prototype → active) | `⏳ PENDING` |
+| **Instance** | Which ALLM instance hosts the thread | INT-P01 (AI.WeOwn.Agency) |
+| **Tool Agent** | Service account username in `t-<TOOL>_tool` format (R-198) | `t-keycloak_tool` |
 
-### 2.3 MAIT Is Both Documentation AND Agent (per @GTM)
+### 2.4 MAIT Is Both Documentation AND Agent (per @GTM)
 
 From the W26 D4 ad-hoc conversation (GTM_2026-W26_4469):
 
@@ -182,6 +203,17 @@ Every MAIT starts from `maits/TEMPLATE.md`. Here is the template definition:
 | **Thread UUID** | ⏳ PENDING (created when ALLM thread is spun up) |
 | **Instance** | INT-P01 (AI.WeOwn.Agency) |
 
+## Capabilities
+
+@MAIT:#<SME> can help with:
+
+1. **<Capability 1>** — <What it can do, in concrete action terms>
+2. **<Capability 2>** — <What it can do>
+3. **<Capability 3>** — <What it can do>
+4. **<Capability 4>** — <What it can do>
+
+Each capability links to the relevant `docs/` reference material for deeper context.
+
 ## Domain
 
 <2-3 sentence description of what this MAIT is the subject matter expert on.
@@ -256,6 +288,15 @@ ecosystem. You operate in the `workspace:tools` 🧠 thread of INT-P01.
 
 <2-3 sentences about the MAIT's purpose>
 
+## Capabilities
+
+@MAIT:#<SME> can help you with:
+
+1. **<Capability 1>** — <Action it can take>
+2. **<Capability 2>** — <Action it can take>
+3. **<Capability 3>** — <Action it can take>
+4. **<Capability 4>** — <Action it can take>
+
 ## Knowledge
 
 <Key facts the system prompt must embed — the non-inferable knowledge that
@@ -325,9 +366,35 @@ Every MAIT has a lifecycle state tracked in its `README.md` and `AGENTS.md`.
 | Transition | Requirement | Approver |
 |------------|-------------|----------|
 | Proposed → Prototype | AGENTS.md + README exist | @MOT 🛠️ |
-| Prototype → Active | ALLM thread created, system prompt deployed | Steward |
+| Prototype → Active | ALLM thread created, system prompt deployed, Tool Agent user created per R-198 | Steward |
 | Active → Locked | R-011 approval | @GTM 🎯 |
 | Active → Deprecated | Replacement MAIT exists or SME retired | @GTM 🎯 |
+
+### Tool Agent Setup Workflow (per BP-026)
+
+When a MAIT transitions from Prototype → Active:
+
+1. **Create Tool Agent user** in `t-<TOOL>_tool` format (R-198) — MUST be done BEFORE thread creation (L-058)
+2. **Assign** to `workspace:tools` 🧠
+3. **Create MAIT thread** with system prompt from `SYSTEM_PROMPT.md`
+4. **Upload RAG docs** from `docs/` — embed in the thread's workspace
+5. **Configure** per instance standards
+6. **Verify** — thread responds correctly, RAG is searchable
+
+### Existing Production Threads
+
+Some MAITs already have active threads on INT-P01 (AI.WeOwn.Agency), registered
+in the **SharedKernel v3.2.2.1 Thread Registry** (canonical source):
+
+| Thread | Steward | Status |
+|--------|---------|--------|
+| MAIT_AnythingLLM.com | @GTM | ✅ ACTIVE |
+| MAIT_Deepnote.com | @GTM | ✅ ACTIVE |
+| MAIT_Pinata.cloud | @GTM | ✅ ACTIVE |
+| MAIT_Restream.io | @LFG (Primary), @GTM (Backup) | ⬜ PENDING |
+
+For the full canonical registry (UUIDs, Thread URLs), see the SharedKernel at
+`CCCbotNet/fedarch/_SYS_/SharedKernel.md`.
 
 ---
 
@@ -455,13 +522,18 @@ ln -s /path/to/s004_fedarch/_MAITS_ maits
 
 ## 12. ALLM Bridge Notes
 
-### 12.1 Current State (W26 D4)
+### 12.1 Landscape
 
-| Component | Status | Reference |
-|-----------|--------|-----------|
-| ALLM v1.14.1 fork | 📋 Planned by @GTM | Chat transcript |
-| `workspace:tools` threads | ⏳ Not yet created | @SHD 🇵🇰 is ALLM developer |
-| MCP schemas for MAITs | ❌ Future | Depends on ALLM MCP capabilities |
+| Component | INT-P01 (Prod) | Dev (dev.weown.tools) |
+|-----------|----------------|----------------------|
+| ALLM version | v1.14.1 | Being set up by @SHD 🇵🇰 |
+| `workspace:tools` threads | ✅ Multiple active MAITs exist | ⏳ Not yet created |
+| MCP schemas for MAITs | ⏳ Check SharedKernel Thread Registry | ❌ Future |
+
+**Key fact:** MAITs for **AnythingLLM**, **Deepnote.com**, and **Pinata.cloud**
+already have active threads on INT-P01 with real UUIDs, registered in the
+canonical SharedKernel v3.2.2.1. These were created by @GTM directly.
+Our prototypes in `maits/` are iterating toward those production threads.
 
 ### 12.2 What We're Bridging
 
@@ -488,7 +560,8 @@ For each MAIT, the transition to an ALLM thread requires:
 | Artifact | Source | Action |
 |----------|--------|--------|
 | System prompt | `maits/<sme>/SYSTEM_PROMPT.md` | Copy into thread configuration |
-| RAG content | Future `maits/<sme>/docs/` content | Upload to workspace and embed |
+| Tool Agent user | Created per R-198 (`t-<TOOL>_tool`) | MUST precede thread creation (L-058) |
+| RAG content | `maits/<sme>/docs/` content | Upload to workspace and embed |
 | Thread UUID | Generated by ALLM | Insert placeholder in `AGENTS.md` and `README.md` |
 | Steward assignment | From `README.md` | Confirm with the human |
 | MCP tool config | Future | Configure per MAIT needs |

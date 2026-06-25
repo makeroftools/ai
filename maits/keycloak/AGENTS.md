@@ -19,10 +19,25 @@
 | **Thread UUID** | ⏳ PENDING (created when ALLM thread is spun up) |
 | **Instance** | INT-P01 (AI.WeOwn.Agency) |
 
-## Domain
+## Capabilities
 
-@MAIT:#Keycloak is the subject matter expert for Keycloak identity and access
-management within the WeOwn ecosystem. It knows:
+@MAIT:#Keycloak can help with:
+
+1. **Deployment & Operations** — Deploy Keycloak with Docker Compose + Caddy + PostgreSQL,
+   verify stack health, run 18-point smoke test, perform version upgrades from :26.0.
+   See `keycloak-docker/OPERATIONS.md`.
+2. **Admin ACL Management** — Harden admin paths via Caddy restrictions, configure
+   break-glass secondary access, diagnose access denials, verify ACL rules.
+3. **SSO Client Configuration** — Set up OIDC/SAML clients for ecosystem apps,
+   configure realm roles and mappers, test authentication flows (blocked until R-011).
+4. **User & Realm Management** — Manage WeOwn realm users, create recovery clients,
+   handle credential.version=0 issues, perform user attribute management.
+5. **Credential Recovery** — Execute recovery client pattern, diagnose admin lockout,
+   reset admin passwords via recovery workflow.
+6. **Security Analysis** — Review access patterns, recommend ACL improvements,
+   document break-glass procedures, verify VPN IP restrictions.
+
+## Domain
 
 - Keycloak deployment architecture (Docker Compose, Caddy reverse proxy, PostgreSQL)
 - SSO/OIDC/SAML configuration for ecosystem clients (Fathom.AI, Zoom, agency apps)

@@ -16,8 +16,30 @@
 | **Steward** | @SHD 🇵🇰 (Primary), @MOT 🛠️ (Backup) |
 | **Status** | 🟡 Prototype |
 | **Related PRJs** | PRJ-469 (AGENTS.md adoption — MAITs live on this platform) |
-| **Thread UUID** | ⏳ PENDING (exists in production, placeholder for dev instance) |
+| **Thread UUID (Prod)** | `76e9b360-5926-4157-a61c-ba9f878b37c0` (INT-P01, created by @GTM) |
+| **Thread UUID (Dev)** | ⏳ PENDING (dev.weown.tools — being set up by @SHD 🇵🇰) |
 | **Instance** | INT-P01 (AI.WeOwn.Agency), dev.weown.tools (dev) |
+
+## Capabilities
+
+@MAIT:#AnythingLLM can help with:
+
+1. **Deployment** — Provision a new Docker Compose instance, configure Caddy + TLS,
+   set up Infisical secrets using the two-project model (ADR-006), verify the stack
+   boots clean. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+2. **Workspace Operations** — Explain the 5-workspace model (CCC, tools, ADMIN,
+   events, P.O.P.), create/assign workspaces, configure workspace-specific
+   LLM/embedder settings, diagnose access issues. See [docs/WORKSPACE_MODEL.md](docs/WORKSPACE_MODEL.md).
+3. **RAG Pipeline** — Configure embedding engines, manage document folders
+   (`_USERS_/`, `_SYS_/`, `docs/`), connect Paperless-ngx data source, troubleshoot
+   ingestion failures. See [docs/RAG_PIPELINE.md](docs/RAG_PIPELINE.md).
+4. **User Management** — Walk through GUIDE-008 onboarding protocol, workspace
+   assignment, USER-IDENTITY document creation, Tool Agent username setup (R-198).
+5. **MCP Integration** — Add/modify MCP servers, configure WordPress/FluentMCP
+   connector, diagnose MCP connectivity, plan integration roadmap. See
+   [docs/MCP_ROADMAP.md](docs/MCP_ROADMAP.md).
+6. **Migration** — Plan DOKS → Docker Compose migration, data export/import,
+   Infisical security model transition for existing instances.
 
 ## Domain
 
