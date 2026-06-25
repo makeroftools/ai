@@ -31,6 +31,10 @@ the eventual migration to WeOwnLLM.
 
 - [AGENTS.md](AGENTS.md) — Agent instructions (override file)
 - [SYSTEM_PROMPT.md](SYSTEM_PROMPT.md) — Thread system prompt
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Architecture, provisioning flow, Infisical security model, backup strategy
+- [docs/WORKSPACE_MODEL.md](docs/WORKSPACE_MODEL.md) — The 5-workspace model, assignment rules, user onboarding
+- [docs/RAG_PIPELINE.md](docs/RAG_PIPELINE.md) — Ingestion flow, embedding, folder structure, data connectors
+- [docs/MCP_ROADMAP.md](docs/MCP_ROADMAP.md) — MCP integration state, targets, and planned capabilities
 - [Deployment (Docker)](../../anythingllm-docker/) — Docker Compose infrastructure
 - [Deployment (K8s)](../../anythingllm/) — Kubernetes Helm chart infrastructure
 
@@ -39,3 +43,4 @@ the eventual migration to WeOwnLLM.
 | Date | Change | By |
 |------|--------|----|
 | 2026-06-25 | Created — initial MAIT prototype | @MOT 🛠️ |
+| 2026-06-25 | Added `docs/` — DEPLOYMENT, WORKSPACE_MODEL, RAG_PIPELINE, MCP_ROADMAP | @MOT 🛠️ |
