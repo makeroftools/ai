@@ -35,7 +35,7 @@
     infisical_env: "{{ lookup('env', 'INFISICAL_ENV') | default('prod', True) }}"
     droplet_name: "sso"
     git_commit_short: "{{ lookup('pipe', 'git rev-parse --short HEAD 2>/dev/null || echo unknown') }}"
-    keycloak_image: reg.mini.dev/keycloak:latest
+    keycloak_image: reg.mini.dev/keycloak:26.0 # Pinned per Lesson #1 — verify before bumping
     caddy_image: reg.mini.dev/caddy:2
     postgres_version: "16"
 
@@ -48,6 +48,33 @@
           INFISICAL_PROJECT_ID env var is required. This is the same value
           as terraform.tfvars infisical_project_id. Run:
           INFISICAL_PROJECT_ID=<id> ansible-playbook ...
+
+    - name: Verify pinned image version matches running container
+      ansible.builtin.shell: |
+        set -euo pipefail
+        # Check if keycloak container exists and extract its image tag
+        RUNNING_TAG=$(docker inspect --format '{{index .Config.Image}}' sso-keycloak-1 2>/dev/null \
+          | awk -F: '{print $2}' || echo "not-found")
+        PINNED_TAG="{{ keycloak_image | split(':') | last }}"
+        if [ "$RUNNING_TAG" = "not-found" ]; then
+          echo "INFO: Keycloak container not running yet — version check skipped"
+          exit 0
+        fi
+        if [ "$RUNNING_TAG" != "$PINNED_TAG" ]; then
+          echo "WARNING: Running Keycloak is :$RUNNING_TAG but deploy will pull :$PINNED_TAG"
+          echo "       This is expected during version upgrades. Verify no breaking changes."
+          echo "       Breaking changes to check for $PINNED_TAG:"
+          echo "       - /auth prefix still absent (KC27+ may restore it)"
+          echo "       - KC_HOSTNAME_STRICT behavior unchanged"
+          echo "       - Admin console at /admin/master/console/ still reachable"
+          exit 0
+        fi
+        echo "OK: Running Keycloak tag ($RUNNING_TAG) matches pinned version ($PINNED_TAG)"
+      args:
+        executable: /bin/bash
+      register: version_check
+      changed_when: false
+      failed_when: false
 
     - name: Verify droplet has completed cloud-init bootstrap
       ansible.builtin.stat:

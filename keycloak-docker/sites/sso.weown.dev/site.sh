@@ -104,6 +104,40 @@ cmd_logs() {
   exec ssh -t "root@$ip" 'journalctl -u docker -f'
 }
 
+cmd_ssh() {
+  local droplet="${droplet_name:-sso}"
+  local command="$*"
+  if [[ -n "$command" ]]; then
+    echo "==> Executing via doctl on droplet $droplet..."
+    doctl compute ssh "$droplet" --ssh-command "$command"
+  else
+    echo "==> Opening shell via doctl on droplet $droplet (bypasses firewall)..."
+    doctl compute ssh "$droplet"
+  fi
+}
+
+cmd_smoke() {
+  local ip="${1:-$(get_droplet_ip)}"
+  local site_dir="$SCRIPT_DIR"
+  local framework="$SCRIPT_DIR/../../scripts/smoke-test-framework.sh"
+  local hooks="$SCRIPT_DIR/scripts/smoke-test-hooks.sh"
+
+  if [[ ! -f "$framework" ]]; then
+    echo "ERROR: smoke test framework not found at $framework" >&2
+    exit 1
+  fi
+  if [[ ! -f "$hooks" ]]; then
+    echo "ERROR: smoke test hooks not found at $hooks" >&2
+    exit 1
+  fi
+
+  echo "==> Running smoke test against $ip..."
+  export SITE_NAME="sso.weown.id"
+  export REMOTE_SITE_DIR="/opt/sso"
+  export DROPLET_IP="$ip"
+  exec bash "$framework" "$site_dir" "$hooks"
+}
+
 cmd_health() {
   local ip="${1:-$(get_droplet_ip)}"
   local url="https://sso.weown.id/health/ready"
@@ -134,8 +168,10 @@ Commands:
   deploy [ip]              Deploy to droplet (auto-detects IP if not provided)
   backup [ip]              Run backup (auto-detects IP if not provided)
   restore [ip] <name>      Restore from backup
+  ssh [command]            SSH to droplet via doctl (bypasses firewall)
   logs [ip]                Tail Docker logs via SSH
   health [ip]              Check health endpoint (https://sso.weown.id/health/ready)
+  smoke [ip]               Run smoke test against deployed site
   ip                       Print droplet IP from tofu output
   help                     Show this help message
 
@@ -144,8 +180,11 @@ Examples:
   $0 deploy 198.51.100.42      # Deploy to specific IP
   $0 backup                    # Backup to auto-detected IP
   $0 restore backup_20260606   # Restore from backup
+  $0 ssh                       # Open shell via doctl (bypasses firewall)
+  $0 ssh 'docker ps'           # Run command via doctl
   $0 logs                      # Tail Docker logs
   $0 health                    # Check Keycloak health via HTTPS
+  $0 smoke                     # Run smoke test
   $0 ip                        # Print droplet IP
 
 Environment:
@@ -159,8 +198,10 @@ case "${1:-help}" in
   deploy)  shift; cmd_deploy "$@" ;;
   backup)  shift; cmd_backup "$@" ;;
   restore) shift; cmd_restore "$@" ;;
+  ssh)     shift; cmd_ssh "$@" ;;
   logs)    shift; cmd_logs "$@" ;;
   health)  shift; cmd_health "$@" ;;
+  smoke)   shift; cmd_smoke "$@" ;;
   ip)      shift; cmd_ip ;;
   help|--help|-h) cmd_help ;;
   *)

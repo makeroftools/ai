@@ -48,7 +48,7 @@ services:
           memory: 256M
 
   keycloak:
-    image: reg.mini.dev/keycloak:latest
+    image: reg.mini.dev/keycloak:26.0 # Pinned per Lesson #1 — verify before bumping
     restart: unless-stopped
     depends_on:
       db:

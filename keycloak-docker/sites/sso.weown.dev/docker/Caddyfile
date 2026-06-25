@@ -1,11 +1,17 @@
 # sso - Caddyfile
 # Reverse proxy for Keycloak SSO
-# Admin path /auth/admin/* restricted to ProtonVPN IP 79.127.183.180
+# Keycloak 26+ no longer uses the legacy /auth prefix.
+# Admin paths are at /admin/* — restricted to authorized IPs.
+#   Primary:     79.127.183.180   — ProtonVPN dedicated server
+#   Break-glass: 66.33.8.133      — Decent.House #NoDe (T-Mobile Fiber)
+#   Nuclear:     Minimus.io droplet console (see OPERATIONS.md)
+# Public paths /realms/*, /resources/*, /health/* remain open.
 
 sso.weown.id {
     @admin_blocked {
-        path /auth/admin/*
+        path /admin/*
         not remote_ip 79.127.183.180
+        not remote_ip 66.33.8.133
     }
     respond @admin_blocked 403 {
         body "Access Denied — ProtonVPN required."
@@ -13,6 +19,10 @@ sso.weown.id {
 
     reverse_proxy keycloak:8080 {
         flush_interval -1
+        # Caddy v2 defaults to rewriting Host to the upstream address (keycloak:8080).
+        # Keycloak KC_HOSTNAME_STRICT=true requires Host == sso.weown.id, so preserve
+        # the original client Host header here before forwarding.
+        header_up Host "{host}"
         # Forwarded header (RFC 7239) required by Keycloak KC_PROXY_HEADERS=forwarded
         # Without this, Keycloak generates HTTP URLs in OIDC metadata (issuer, auth endpoint)
         header_up Forwarded "proto=https;host={host}"
@@ -23,10 +33,20 @@ sso.weown.id {
     }
 }
 
-# Keycloak admin console (restrict access in production)
+# Keycloak admin subdomain — restrict ALL traffic to ProtonVPN IP
 admin.sso.weown.id {
+    @not_vpn {
+        not remote_ip 79.127.183.180
+        not remote_ip 66.33.8.133
+    }
+    respond @not_vpn 403 {
+        body "Access Denied — ProtonVPN required."
+    }
+
     reverse_proxy keycloak:8080 {
         flush_interval -1
+        # Same Host header preservation as the primary block above
+        header_up Host "{host}"
         header_up Forwarded "proto=https;host={host}"
     }
 }
