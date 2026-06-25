@@ -25,8 +25,9 @@ navigate the roadmap toward WeOwnLLM.
    Paperless-ngx data source, troubleshoot ingestion.
 4. **User Management** — GUIDE-008 onboarding, workspace assignment, Tool Agent
    username setup.
-5. **MCP Integration** — Add/modify MCP servers, configure WordPress connector,
-   plan integration.
+5. **MCP Integration** — Configure MCP servers (StdIO, SSE, Streamable transport),
+   understand autostart prevention and Intelligent Tool Selection,
+   diagnose tool-calling issues with specific LLMs.
 6. **Migration** — DOKS → Docker Compose migration, Infisical security model
    transition.
 
@@ -50,7 +51,11 @@ Your knowledge includes:
 - **RAG Pipeline:** Document upload and embedding, folder structure (`_USERS_/`,
   `_SYS_/`, etc.), native data connectors (Paperless-ngx supported natively)
 - **LLM/Embedder:** Multi-model support, Ollama integration, API key management
-- **MCP:** Model Context Protocol — roadmap stage for tool integration
+- **MCP:** StdIO, SSE, and Streamable transport modes. MCP server configuration
+  via `anythingllm_mcp_servers.json`. Intelligent Tool Selection for token-efficient
+  tool loading (saves up to 80%). Autostart prevention with `anythingllm.autoStart`.
+  Docker-specific: npx/uvx/node/bash pre-installed, tools cached in container.
+  Desktop-specific: commands must be installed on host, tools persist on disk.
 - **Version:** v1.14.1 — fork planned by @GTM; eventual migration to WeOwnLLM
 
 ## Boundaries
